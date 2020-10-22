@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="menu-flex">
+
+<div class="main-sub">
+<div class="vote-button"><button type="button" id="vote-button">Reset vote</button></div>
+
+<div class="add-option"><button type="button" id="add-option-button">Add option</button></div>
+
+<div class="option-content">
+	<div>Name: <input type="text" id="name"></div>
+	<div>Costume: <input type="text" id="costume"></div>
+</div>
+</div>
+
+<div class="option-list"></div>
+
+<div class="confirm-button"><button type="button" id="confirm-button">Confirm vote</button></div>
+
+<div class="validate">
+	<div id="validate-message"></div>
+	<div><input type="password" id="password"></div>
+	<div><button type="button" id="validate-button">Validate</button></div>
+</div>
+
+</div>
+
+<script>
+alert("appi");
+
+class VoterMaster {
+	constructor() {
+		this.options = [];
+		this.votes = [];
+		new kQuery(".validate").hide();
+	}
+	addOption() {
+		var name = new kQuery("#name").getValue().get()[0];
+		var costume = new kQuery("#costume").getValue().get()[0];
+		new kQuery("#name").setValue("");
+		new kQuery("#costume").setValue("");
+		this.options.push(new Option(name, costume));
+		this.makeVote();
+		this.hide(name + " added option " + costume);
+	}
+	makeVote() {
+		this.vote = new Vote(this.options);
+		this.vote.render();
+	}
+	addVote() {
+		this.votes.push(this.vote);
+		this.makeVote();
+		this.hide("Someone voted");
+	}
+	hide(message) {
+		new kQuery("#validate-message").setInner(message);
+		new kQuery(".vote-button").hide();
+		new kQuery(".add-option").hide();
+		new kQuery(".option-content").hide();
+		new kQuery(".option-list").hide();
+		new kQuery(".confirm-button").hide();
+		new kQuery(".validate").show();
+	}
+	validate() {
+		var password = new kQuery("#password").getValue().get()[0];
+		new kQuery("#password").setValue("");
+		if (password !== "jah") {
+			return;
+		}
+		new kQuery(".vote-button").show();
+		new kQuery(".add-option").show();
+		new kQuery(".option-content").show();
+		new kQuery(".option-list").show();
+		new kQuery(".confirm-button").show();
+		new kQuery(".validate").hide();
+	}
+}
+
+class Vote {
+	constructor(options) {
+		this.activeOptions = [];
+		this.inactiveOptions = [];
+		for (var i = 0; i < options.length; i++) {
+			this.inactiveOptions.push(options[i]);
+		}
+	}
+	addOptionAsFirst(option) {
+		var options = [];
+		var inactiveOptions = [];
+		options.push(option);
+		for (var i = 0; i < this.activeOptions.length; i++) {
+			if (option === this.activeOptions[i]) {
+				continue;
+			}
+			options.push(this.activeOptions[i]);
+		}
+		for (var i = 0; i < this.inactiveOptions.length; i++) {
+			if (option === this.inactiveOptions[i]) {
+				continue;
+			}
+			inactiveOptions.push(this.inactiveOptions[i]);
+		}
+		this.activeOptions = options;
+		this.inactiveOptions = inactiveOptions;
+		this.render();
+	}
+	removeOption(option) {
+		var options = [];
+		var inactiveOptions = [];
+		for (var i = 0; i < this.activeOptions.length; i++) {
+			if (option === this.activeOptions[i]) {
+				continue;
+			}
+			options.push(this.activeOptions[i]);
+		}
+		for (var i = 0; i < this.inactiveOptions.length; i++) {
+			if (option === this.inactiveOptions[i]) {
+				continue;
+			}
+			inactiveOptions.push(this.inactiveOptions[i]);
+		}
+		inactiveOptions.push(option);
+		this.activeOptions = options;
+		this.inactiveOptions = inactiveOptions;
+		this.render();
+	}
+	render() {
+		new kQuery(".option-list").clear();
+		for (var i = 0; i < this.activeOptions.length; i++) {
+			let thisOption = this.activeOptions[i];
+			new kQuery(".option-list")
+				.addDiv(this.activeOptions[i].getName() + ": " + this.activeOptions[i].getCostume())
+				.on("click", () => { this.removeOption(thisOption); })
+				.addClass("chosen");
+		}
+		for (var i = 0; i < this.inactiveOptions.length; i++) {
+			let thisOption = this.inactiveOptions[i];
+			new kQuery(".option-list")
+				.addDiv(this.inactiveOptions[i].getName() + ": " + this.inactiveOptions[i].getCostume())
+				.on("click", () => { this.addOptionAsFirst(thisOption); });
+		}
+	}
+}
+
+class Option {
+	constructor(name, costume) {
+		this.name = name;
+		this.costume = costume;
+	}
+	getName() {
+		return this.name;
+	}
+	getCostume() {
+		return this.costume;
+	}
+}
+
+class kQuery {
+	constructor(query) {
+		this.elements = [];
+		if (query[0] == ".") {
+			this.elements = document.getElementsByClassName(query.substring(1));
+		} else if (query[0] == "#") {
+			this.elements = [document.getElementById(query.substring(1))];
+		}
+	}
+	add_element(element) {
+		this.elements.push(element);
+	}
+	get() {
+		return this.elements;
+	}
+	to_each(to_do) {
+		for (var i = 0; i < this.elements.length; i++) {
+			to_do(this.elements[i]);
+		}
+	}
+	map(to_do) {
+		var new_elements = [];
+		for (var i = 0; i < this.elements.length; i++) {
+			new_elements.push(to_do(this.elements[i]));
+		}
+		this.elements = new_elements;
+		return this;
+	}
+	on(when, to_do) {
+		this.to_each(function (element) {
+			element.addEventListener(when, to_do);
+		});
+		return this;
+	}
+	parent() {
+		return this.map((element) => {
+			return element.parentElement;
+		});
+		return this;
+	}
+	children() {
+		var new_elements = [];
+		for (var i = 0; i < this.elements.length; i++) {
+			var children = this.elements[i].childNodes;
+			for (var j = 0; j < children.length; j++) {
+				new_elements.push(children[j]);
+			}
+		}
+		this.elements = new_elements;
+		return this;
+	}
+	hide() {
+		this.addClass("hidden");
+	}
+	show() {
+		this.removeClass("hidden");
+	}
+	apply(to_do) {
+		this.to_each(function (element) {
+			to_do(element);
+		});
+	}
+	setInner(value) {
+		this.to_each(function (element) {
+			element.innerHTML = value;
+		});
+	}
+	getInner() {
+		return this.map(function (element) {
+			return element.innerHTML;
+		});
+	}
+	setValue(value) {
+		this.to_each(function (element) {
+			element.value = value;
+		});
+	}
+	getValue() {
+		return this.map(function (element) {
+			return element.value;
+		});
+	}
+	addClass(value) {
+		this.to_each(function (element) {
+			element.classList.add(value);
+		});
+	}
+	removeClass(value) {
+		this.to_each(function (element) {
+			element.classList.remove(value);
+		});
+	}
+	addDiv(content) {
+		var nextQuery = new kQuery(" ");
+		this.to_each(function (element) {
+			var div = document.createElement("div");
+			div.innerHTML = content;
+			element.appendChild(div);
+			nextQuery.add_element(div);
+		});
+		return nextQuery;
+	}
+	addDivWithId(content, id) {
+		this.to_each(function (element) {
+			var div = document.createElement("div");
+			div.innerHTML = content;
+			div.setAttribute("id", id);
+			element.appendChild(div);
+		});
+		return this;
+	}
+	addRow(contentArr) {
+		this.to_each(function (element) {
+			var row = element.insertRow(-1);
+			for (var i = 0; i < contentArr.length; i++) {
+				var cell = row.insertCell(i);
+				cell.innerHTML = contentArr[i];
+			}
+		});
+	}
+	clearTable() {
+		this.to_each(function (element) {
+			while (element.rows.length > 1) {
+				element.deleteRow(1);
+			}
+		});
+	}
+	clear() {
+		this.to_each(function (element) {
+			while (element.firstChild) {
+				element.removeChild(element.firstChild);
+			}
+		});
+	}
+}
+
+var voterMaster = new VoterMaster();
+
+new kQuery("#vote-button").on("click", () => { voterMaster.makeVote() });
+new kQuery("#add-option-button").on("click", () => { voterMaster.addOption(); });
+new kQuery("#confirm-button").on("click", () => { voterMaster.addVote() });
+new kQuery("#validate-button").on("click", () => { voterMaster.validate() });
+
+</script>
+
+</body>
+
+</html>

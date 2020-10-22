@@ -1,0 +1,23 @@
+.chosen {
+	background-color: yellow;
+}
+
+.menu-flex {
+	display: flex;
+}
+
+.main-sub {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.option-content {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;	
+}
+
+.hidden {
+	display: none;
+}
