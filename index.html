@@ -31,6 +31,10 @@
 	<button type="button" id="calculate-votes">Calculate votes</button>
 </div>
 
+<div class="draw-results">
+	<canvas id="results" width="400" height="400" style="border:1px solid #000000;"></canvas>
+</div>
+
 </div>
 
 <script>
@@ -47,9 +51,113 @@ class VoterMaster {
 	}
 	calculateVotes() {
 		alert("Calculating votes");
-		for (var i = 0; i < this.votes.length; i++) {
-			alert(this.votes[i]);
+		new kQuery(".draw-results").show();
+		var totals = {};
+		for (var i = 0; i < this.options.length; i++) {
+			totals[this.options[i].getId()] = 0;
 		}
+		this.tempVotes = this.votes;
+		while (true) {
+			this.tempVotes = this.preProcess();
+			//alert(JSON.stringify(this.votes));
+			for (var i = 0; i < this.tempVotes.length; i++) {
+				var choice = this.tempVotes[i][0];
+				if (!(choice in totals)) {
+					totals[choice] = 0;
+				}
+				totals[choice] = totals[choice] + 1;
+			}
+			this.display(totals);
+			if (this.canDeclareWinner(totals)) {
+				var winner = this.findWinner(totals);
+				alert("Winner is " + winner);
+				return;
+			} else {
+				//alert(this.votes);
+				var lowest = this.findLowest(totals);
+				for (var i = 0; i < lowest.length; i++) {
+					this.tempVotes = this.deleteFromVotes(lowest[i]);
+				}
+				//alert("Deleted " + lowest);
+				//alert(this.votes);
+			}
+			totals = {};
+		}
+	}
+	display(totals) {
+		var rawString = "";
+		Object.keys(totals).forEach(key => {
+			var name = this.findNameFromId(key);
+			rawString += name + ": " + totals[key] + "\n";
+		});
+		alert(rawString);
+	}
+	deleteFromVotes(id) {
+		//alert("Deleting");
+		var newVotes = [];
+		for (var i = 0; i < this.tempVotes.length; i++) {
+			var thisVote = [];
+			for (var j = 0; j < this.tempVotes[i].length; j++) {
+				if (id != this.tempVotes[i][j]) {
+					thisVote.push(this.tempVotes[i][j]);
+				}
+			}
+			newVotes.push(thisVote);
+		}
+		return newVotes;
+	}
+	findLowest(totals) {
+		//alert("Finding lowest");
+		var minValue = 99999;
+		var minIds = [];
+		Object.keys(totals).forEach(key => {
+			if (totals[key] < minValue) {
+				//alert("Switched from " + minValue + " to " + totals[key]);
+				minValue = totals[key];
+				minIds = [key];
+			} else if (totals[key] == minValue) {
+				minIds.push(key);
+			}
+		});
+		return minIds;
+	}
+	findWinner(totals) {
+		var maxValue = 0;
+		var maxId = null;
+		Object.keys(totals).forEach(key => {
+			if (totals[key] > maxValue) {
+				maxValue = totals[key];
+				maxId = key;
+			}
+		});
+		return this.findNameFromId(maxId);
+	}
+	findNameFromId(id) {
+		for (var i = 0; i < this.options.length; i++) {
+			if (this.options[i].getId() == id) {
+				return this.options[i].getName();
+			}
+		}
+	}
+	canDeclareWinner(totals) {
+		var total = 0;
+		Object.values(totals).forEach(value => { total += value; });
+		var found = false;
+		Object.keys(totals).forEach(key => {
+			if (2 * totals[key] > total) {
+				found = true;
+			}
+		});
+		return found;
+	}
+	preProcess() {
+		var newArr = [];
+		for (var i = 0; i < this.tempVotes.length; i++) {
+			if (this.tempVotes[i].length > 0) {
+				newArr.push(this.tempVotes[i]);
+			}
+		}
+		return newArr;
 	}
 	addOption() {
 		var name = new kQuery("#name").getValue().get()[0];
@@ -75,6 +183,7 @@ class VoterMaster {
 		}
 		this.votes.push(actualVote);
 		this.makeVote();
+		this.set_votes_cookie();
 		this.hide("Someone voted", "green");
 	}
 	set_options_cookie() {
@@ -140,7 +249,7 @@ class VoterMaster {
 		new kQuery(".option-list").hide();
 		new kQuery(".confirm-button").hide();
 		new kQuery(".validate").show();
-		setTimeout(() => { this.show(color); }, 3000);
+		setTimeout(() => { this.show(color); }, 50);
 	}
 	show(color) {
 		new kQuery(".everything").removeClass(color);
@@ -403,6 +512,7 @@ new kQuery("#add-option-button").on("click", () => { voterMaster.addOption(); })
 new kQuery("#confirm-button").on("click", () => { voterMaster.addVote(); });
 //new kQuery("#validate-button").on("click", () => { voterMaster.validate() });
 new kQuery("#calculate-votes").on("click", () => { voterMaster.calculateVotes(); });
+new kQuery(".draw-results").hide();
 
 </script>
 
