@@ -3,6 +3,7 @@
 
 <head>
 <link rel="stylesheet" href="style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
 <body class="everything">
@@ -27,12 +28,8 @@
 	<div id="validate-message"></div>
 </div>
 
-<div class="calculate-votes">
+<div class="calculate-votes" hidden="true">
 	<button type="button" id="calculate-votes">Calculate votes</button>
-</div>
-
-<div class="draw-results">
-	<canvas id="results" width="400" height="400" style="border:1px solid #000000;"></canvas>
 </div>
 
 </div>
@@ -75,6 +72,14 @@ class VoterMaster {
 			} else {
 				//alert(this.votes);
 				var lowest = this.findLowest(totals);
+				if (lowest.length == Object.keys(totals).length) {
+					alert("Ohoh, a tie has occured");
+					for (var i = 0; i < lowest.length; i++) {
+						var tier = this.findNameFromId(lowest[i]);
+						alert("One of them is " + tier);
+					}
+					return;
+				}
 				for (var i = 0; i < lowest.length; i++) {
 					this.tempVotes = this.deleteFromVotes(lowest[i]);
 				}
@@ -168,7 +173,7 @@ class VoterMaster {
 		new kQuery("#costume").setValue("");
 		this.options.push(new Option(name, costume, id));
 		this.makeVote();
-		this.hide(name + " added option " + costume, "yellow");
+		//this.hide(name + " added option " + costume, "yellow");
 		this.set_options_cookie();
 	}
 	makeVote() {
@@ -194,7 +199,16 @@ class VoterMaster {
 		for (var i = 0; i < this.options.length; i++) {
 			safeOptions.push(this.options[i].serialize());
 		}
-		document.cookie = "options=" + JSON.stringify(safeOptions) + ";" + expires + ";path=/";
+		var optionsString = JSON.stringify(safeOptions);
+		document.cookie = "options=" + optionsString + ";" + expires + ";path=/";
+		//alert("Added options cookie");
+		$.ajax({
+            type: 'POST',
+            url: 'http://kask.website/vote.php',
+            data: {data: optionsString},
+            success: function (response) {}
+        });
+        //alert("Got past ajax request part");
 	}
 	set_votes_cookie() {
 		var date = new Date();
@@ -204,7 +218,7 @@ class VoterMaster {
 		document.cookie = "votes=" + votesString + ";" + expires + ";path=/";
 		$.ajax({
             type: 'POST',
-            url: 'vote.php',
+            url: 'http://kask.website/vote.php',
             data: {data: votesString},
             success: function (response) {}
         });
@@ -256,7 +270,7 @@ class VoterMaster {
 		new kQuery(".option-list").hide();
 		new kQuery(".confirm-button").hide();
 		new kQuery(".validate").show();
-		setTimeout(() => { this.show(color); }, 50);
+		setTimeout(() => { this.show(color); }, 3000);
 	}
 	show(color) {
 		new kQuery(".everything").removeClass(color);
@@ -296,13 +310,13 @@ class Vote {
 	addOptionAsFirst(option) {
 		var options = [];
 		var inactiveOptions = [];
-		options.push(option);
 		for (var i = 0; i < this.activeOptions.length; i++) {
 			if (option === this.activeOptions[i]) {
 				continue;
 			}
 			options.push(this.activeOptions[i]);
 		}
+		options.push(option);
 		for (var i = 0; i < this.inactiveOptions.length; i++) {
 			if (option === this.inactiveOptions[i]) {
 				continue;
@@ -519,7 +533,6 @@ new kQuery("#add-option-button").on("click", () => { voterMaster.addOption(); })
 new kQuery("#confirm-button").on("click", () => { voterMaster.addVote(); });
 //new kQuery("#validate-button").on("click", () => { voterMaster.validate() });
 new kQuery("#calculate-votes").on("click", () => { voterMaster.calculateVotes(); });
-new kQuery(".draw-results").hide();
 
 </script>
 
