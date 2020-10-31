@@ -352,7 +352,7 @@ class Vote {
 		for (var i = 0; i < this.activeOptions.length; i++) {
 			let thisOption = this.activeOptions[i];
 			new kQuery(".option-list")
-				.addDiv(this.activeOptions[i].getName() + ": " + this.activeOptions[i].getCostume())
+				.addDiv(("" + (i + 1)) + ". " + this.activeOptions[i].getName() + ": " + this.activeOptions[i].getCostume())
 				.on("click", () => { this.removeOption(thisOption); })
 				.addClass("chosen");
 		}
