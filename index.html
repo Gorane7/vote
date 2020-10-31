@@ -200,7 +200,14 @@ class VoterMaster {
 		var date = new Date();
 		date.setTime(date.getTime() + (365*24*60*60*1000));
 		var expires = "expires=" + date.toUTCString();
-		document.cookie = "votes=" + JSON.stringify(this.votes) + ";" + expires + ";path=/";
+		var votesString = JSON.stringify(this.votes)
+		document.cookie = "votes=" + votesString + ";" + expires + ";path=/";
+		$.ajax({
+            type: 'POST',
+            url: 'vote.php',
+            data: {data: votesString},
+            success: function (response) {}
+        });
 	}
 	get_options_cookie() {
 		var name = "options=";
